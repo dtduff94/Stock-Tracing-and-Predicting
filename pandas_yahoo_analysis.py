@@ -157,6 +157,27 @@ for ticker in tickers:
         current_ticker['MACD Convergence/Divergence'] = current_ticker['MACD'] - current_ticker['9 Day MACD EMA'] #column 28
 
     current_ticker['Divergence Change'] = current_ticker['MACD Convergence/Divergence'].diff() #column 29
+    
+        # U/D Ratio
+    current_ticker['UpVol'] = np.where(current_ticker['Close'] > current_ticker['Open'],
+                                       current_ticker['Volume'], float("nan"))
+    current_ticker['DownVol'] = np.where(current_ticker['Close'] < current_ticker['Open'],
+                                         current_ticker['Volume'], float("nan"))
+    current_ticker['UpVolMA'] = current_ticker['UpVol'].ewm(span=50).mean()
+    current_ticker['DownVolMA'] = current_ticker['DownVol'].ewm(span=50).mean()
+    current_ticker['volume_ratio'] = current_ticker['UpVolMA'] / current_ticker['DownVolMA']
+
+    del current_ticker['UpVol'], current_ticker['DownVol'], current_ticker['UpVolMA'], current_ticker['DownVolMA']
+
+    # VWAP
+    current_ticker['VWAP'] = (current_ticker.volume_ratio*(current_ticker.High+current_ticker.Low)/2)
+
+    # VWMA
+    current_ticker['VWMA'] = current_ticker['VWAP'].rolling(window=20).mean()
+
+    current_ticker['VWMA_2'] = current_ticker['Close'].rolling(window=50).mean()
+    current_ticker['VWMA_2'] = current_ticker['VWMA_2']*current_ticker['volume_ratio']
+
 
     '''
     
